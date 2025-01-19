@@ -20,7 +20,7 @@ This document provides quick instructions on how to generate and run Alembic mig
     docker compose up -d
     ```
 
-4. [Apply Migrations](#apply-migrations)
+4. [Apply Migrations](#running-migrations)
 
 ## Run
 

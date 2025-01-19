@@ -1,6 +1,6 @@
-from datetime import date, datetime, timedelta
+from datetime import timedelta
 
-from sqlalchemy import Column, Date, Float, Integer, String
+from sqlalchemy import Column, Date, Float, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.expression import func
 
@@ -23,6 +23,11 @@ class StockData(Base):
     ticker = Column(String(10), index=True)  # Ticker symbol of the stock
     daily_pct_change = Column(Float)  # Daily percentage change in stock price
 
+    # Define unique constraint on ticker and date
+    __table_args__ = (
+        UniqueConstraint('ticker', 'date', name='uq_ticker_date'),
+    )
+
     def __repr__(self):
         return f"<StockData(id={self.id}, date={self.date}, ticker={self.ticker}, price={self.price}, daily_pct_change={self.daily_pct_change})>"
 
@@ -39,9 +44,8 @@ class StockData(Base):
 
             date = max_date
 
-            while last_price == None:
-                date -= timedelta(days=1)
-                last_price = StockData.get_price_on_or_after(session, ticker, date)
+            date -= timedelta(days=1)
+            last_price = StockData.get_price_on_or_after(session, ticker, date)
 
             total += last_price - first_price
             count += 1

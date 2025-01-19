@@ -111,7 +111,7 @@ class Investor:
 def main():
     time_delta = timedelta(days=14)
 
-    investor = Investor(number_of_tickers=50)
+    investor = Investor(number_of_tickers=501)
     investor.simulate(100, time_delta)
     print(investor.total_return())
     print(StockData.get_total_return(session))
