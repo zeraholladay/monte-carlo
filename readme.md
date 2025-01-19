@@ -1,4 +1,4 @@
-# README: Running Alembic Migrations
+# Quick start
 
 This document provides quick instructions on how to generate and run Alembic migrations.
 
@@ -6,12 +6,27 @@ This document provides quick instructions on how to generate and run Alembic mig
 
 ## Prerequisites
 
-1. Ensure Alembic is installed:
+1. Ensure requirements are installed:
    ```bash
-   pip install alembic
+   python3 -mvenv .venv
+   pip install -r requirements.txt
    ```
 
 2. Make sure your `alembic.ini` and `env.py` files are properly configured.
+
+3. Start the Postgres database:
+
+    ```bash
+    docker compose up -d
+    ```
+
+4. [Apply Migrations](#apply-migrations)
+
+## Run
+
+    ```bash
+    python run.py
+    ```
 
 ---
 
