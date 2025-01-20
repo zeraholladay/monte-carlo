@@ -23,6 +23,8 @@ Consumer Durables         2
 Transportation            1
 ```
 
+Example chart:
+
 ![Sample Bar Chart](bar_chart.png)
 
 
@@ -49,9 +51,9 @@ Transportation            1
 
 Running:
 
-    ```bash
-    python run.py
-    ```
+```bash
+python run.py
+```
 
 ---
 
