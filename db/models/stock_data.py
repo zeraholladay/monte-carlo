@@ -1,4 +1,3 @@
-from datetime import timedelta
 from functools import cache
 
 from sqlalchemy import Column, Date, Float, Integer, String, UniqueConstraint

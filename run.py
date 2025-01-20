@@ -61,7 +61,13 @@ class AllTickers:
         ]
         self.df = pd.DataFrame(data)
 
-    # all_tickers.df.loc[all_tickers.df["Last Cumulative Return"] > all_tickers.avg_last_cum_return, "Tickers"]
+    @property
+    def winner_tickers(self):
+        return self.df.loc[self.df["Last Cumulative Return"] > self.avg_last_cum_return, "Tickers"].tolist()
+
+    @property
+    def loser_tickers(self):
+        return self.df.loc[self.df["Last Cumulative Return"] <= self.avg_last_cum_return, "Tickers"].tolist()
 
     @property
     def date_range(self):
@@ -75,6 +81,49 @@ class AllTickers:
     def percentage_greater_than_avg_last_cum_return(self):
         return (self.df["Last Cumulative Return"] > self.avg_last_cum_return).mean()
 
+    def show_graph(self):
+        import plotly.graph_objects as go
+
+        sorted_df = self.df.sort_values(by="Last Cumulative Return", ascending=True)
+
+        tickers = sorted_df["Tickers"]
+        cumulative_returns = sorted_df["Last Cumulative Return"]
+
+        # Create the figure
+        threshold = self.avg_last_cum_return
+        colors = ["green" if value > threshold else "red" for value in cumulative_returns]
+
+        fig = go.Figure()
+
+        # Add a bar trace
+        fig.add_trace(
+            go.Bar(
+                x=tickers,  # Tickers on the x-axis
+                y=cumulative_returns,  # Cumulative returns on the y-axis
+                name="Cumulative Returns",
+                marker_color=colors  # Use the dynamic color list
+            )
+        )
+
+        # Format the dates into a human-readable format
+        raw_date_range = self.date_range
+
+        formatted_date_range = (
+            raw_date_range[0].strftime("%B %d, %Y"),
+            raw_date_range[1].strftime("%B %d, %Y"),
+        )
+
+        # Customize the layout
+        fig.update_layout(
+            title=f"Cumulative Returns by Ticker from {formatted_date_range[0]} to {formatted_date_range[1]}",
+            xaxis_title="Ticker",
+            yaxis_title="Cumulative Return",
+            yaxis_tickformat=".0%",  # Format y-axis as percentage
+            template="plotly"
+        )
+
+        # Show the figure
+        fig.show()
 
 def main():
     all_tickers = AllTickers()
@@ -84,6 +133,7 @@ def main():
     print(
         f"Percentage of Tickers Greater Than Last Cumulative Return: {all_tickers.percentage_greater_than_avg_last_cum_return:.2%}"
     )
+    all_tickers.show_graph()
 
     # import pdb; pdb.set_trace()
 

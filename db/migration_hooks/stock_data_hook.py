@@ -5,7 +5,7 @@ from datetime import timedelta
 from sqlalchemy.orm import Session
 
 from alembic import op
-from db import StockData
+from ..models.stock_data import StockData
 
 
 def stock_data_hook(session: Session, stock_data_table) -> None:
