@@ -142,6 +142,8 @@ class AllTickers:
         # Show the figure
         fig.show()
 
+        fig.write_image("bar_chart.png", format="png")
+
 
 def main():
     all_tickers = AllTickers()
