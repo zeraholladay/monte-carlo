@@ -91,7 +91,15 @@ class AllTickers:
 
         # Create the figure
         threshold = self.avg_last_cum_return
-        colors = ["green" if value > threshold else "red" for value in cumulative_returns]
+        def _colorize(value):
+            if value > threshold:
+                return "green"
+            elif value < 0:
+                return "red"
+            else:
+                return "yellow"
+
+        colors = [_colorize(value) for value in cumulative_returns]
 
         fig = go.Figure()
 
