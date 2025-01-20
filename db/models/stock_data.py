@@ -1,13 +1,14 @@
 from datetime import timedelta
+from functools import cache
 
 from sqlalchemy import Column, Date, Float, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Session
 from sqlalchemy.sql.expression import func
 
-from .base import Base
+from .base import ModelBase
 
 
-class StockData(Base):
+class StockData(ModelBase):
     """
     SQLAlchemy model for storing stock data.
     """
@@ -24,36 +25,13 @@ class StockData(Base):
     daily_pct_change = Column(Float)  # Daily percentage change in stock price
 
     # Define unique constraint on ticker and date
-    __table_args__ = (
-        UniqueConstraint('ticker', 'date', name='uq_ticker_date'),
-    )
+    __table_args__ = (UniqueConstraint("ticker", "date", name="uq_ticker_date"),)
 
     def __repr__(self):
         return f"<StockData(id={self.id}, date={self.date}, ticker={self.ticker}, price={self.price}, daily_pct_change={self.daily_pct_change})>"
 
     @staticmethod
-    def get_total_return(session):
-        min_date, max_date = StockData.get_date_range(session)
-
-        total = 0
-        count = 0
-
-        for ticker in StockData.get_all_unique_tickers(session):
-            first_price = StockData.get_price_on_or_after(session, ticker, min_date)
-            last_price = StockData.get_price_on_or_after(session, ticker, max_date)
-
-            date = max_date
-
-            date -= timedelta(days=1)
-            last_price = StockData.get_price_on_or_after(session, ticker, date)
-
-            total += last_price - first_price
-            count += 1
-
-        return total / count
-
-    @staticmethod
-    def get_all_unique_tickers(session):
+    def get_all_unique_tickers(session: Session):
         """
         Retrieve all unique tickers from the StockData table.
 
@@ -67,6 +45,7 @@ class StockData(Base):
         return [ticker[0] for ticker in unique_tickers]
 
     @staticmethod
+    @cache
     def select_random_tickers(session: Session, n: int = 1):
         """
         Selects n non-repeating random tickers from the StockData table.

@@ -1,9 +1,10 @@
 from datetime import date, datetime, timedelta
 
+import pandas as pd
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from db import Base, StockData
+from db import StockData
 
 DATABASE_URL = "postgresql://postgres:localhostonly@localhost:5432/postgres"
 
@@ -12,120 +13,79 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 session = SessionLocal()
 
 
-class Investment:
+class Ticker:
     def __init__(self, ticker: str):
         """
-        Initialize an investment with a ticker symbol and an empty activity log.
+        Initialize an investment with a ticker symbol.
 
         Args:
             ticker (str): The stock ticker symbol.
         """
         self.ticker = ticker
-        self.activity = []
+        self._calc_returns()
 
-    def buy(self, investment_amount: int, date):
-        """
-        Buy stock units for the given investment amount on a specified date.
+    def _get_stock_data(self):
+        return StockData.get_ordered_dates_and_prices(session, self.ticker)
 
-        Args:
-            investment_amount (int): The amount of money to invest.
-            date (Date): The date of the purchase.
-        """
-        price = StockData.get_price_on_or_after(session, self.ticker, date)
+    @property
+    def avg_return(self):
+        return self.df["Return"].mean()
 
-        units = investment_amount / price
-        self.activity.append(
-            {"date": date, "amount": investment_amount, "units": units}
-        )
+    @property
+    def last_cum_return(self):
+        return self.df["Cumulative Return"].iloc[-1]
 
-    def get_total_invested_amount(self):
-        """
-        Calculate the total amount invested so far.
+    def _calc_returns(self):
+        stock_data = self._get_stock_data()
 
-        Returns:
-            int: The total amount invested.
-        """
-        return sum(entry["amount"] for entry in self.activity)
+        data = {
+            "Date": [date for date, _ in stock_data],
+            "Price": [price for _, price in stock_data],
+        }
+        self.df = pd.DataFrame(data)
+        self.df["Date"] = pd.to_datetime(self.df["Date"])
 
-    def get_value_as_of(self, date):
-        """
-        Calculate the current value of the investment as of a specified date.
+        # Calculate daily returns (percentage change)
+        self.df["Return"] = self.df["Price"].pct_change()
 
-        Args:
-            date (Date): The date to calculate the value for.
-
-        Returns:
-            float: The total value of the investment as of the specified date.
-        """
-        total_units = sum(entry["units"] for entry in self.activity)
-        price = StockData.get_price_on_or_after(session, self.ticker, date)
-
-        return total_units * price
+        # Calculate cumulative return
+        self.df["Cumulative Return"] = (1 + self.df["Return"]).cumprod() - 1
 
 
-class Investor:
-    def __init__(self, number_of_tickers: int):
-        """
-        Initialize an investor with a specified number of tickers and create investments for them.
-
-        Args:
-            number_of_tickers (int): The number of tickers to invest in.
-        """
-        self.number_of_tickers = number_of_tickers
-        self.investments = [
-            Investment(ticker)
-            for ticker in StockData.select_random_tickers(session, n=number_of_tickers)
+class AllTickers:
+    def __init__(self):
+        data = {}
+        data["Tickers"] = StockData.get_all_unique_tickers(session)
+        data["Last Cumulative Return"] = [
+            Ticker(n).last_cum_return for n in data["Tickers"]
         ]
+        self.df = pd.DataFrame(data)
 
-    def simulate(self, total_amount: int, date_delta):
-        """
-        Simulate the investment process over a range of dates, distributing investments equally across tickers.
+    # all_tickers.df.loc[all_tickers.df["Last Cumulative Return"] > all_tickers.avg_last_cum_return, "Tickers"]
 
-        Args:
-            total_amount (int): The total amount of money to invest.
-            date_delta (timedelta): The time interval between successive investments.
-        """
-        min_date, max_date = StockData.get_date_range(session)
-        current_date = min_date
+    @property
+    def date_range(self):
+        return StockData.get_date_range(session)
 
-        investment_amount_per_ticker = total_amount / self.number_of_tickers
+    @property
+    def avg_last_cum_return(self):
+        return self.df["Last Cumulative Return"].mean()
 
-        while current_date < max_date:
-            for investment in self.investments:
-                investment.buy(investment_amount_per_ticker, current_date)
-            current_date += date_delta
-
-    def total_return(self):
-        _, max_date = StockData.get_date_range(session)
-
-        total_invested = 0
-        total_value = 0
-
-        for investment in self.investments:
-            total_invested += investment.get_total_invested_amount()
-            total_value += investment.get_value_as_of(max_date)
-
-        return total_value - total_invested
+    @property
+    def percentage_greater_than_avg_last_cum_return(self):
+        return (self.df["Last Cumulative Return"] > self.avg_last_cum_return).mean()
 
 
 def main():
-    time_delta = timedelta(days=14)
+    all_tickers = AllTickers()
 
-    investor = Investor(number_of_tickers=501)
-    investor.simulate(100, time_delta)
-    print(investor.total_return())
-    print(StockData.get_total_return(session))
+    print(f"Date range: {all_tickers.date_range}")
+    print(f"Avg Last Cumulative Return: {all_tickers.avg_last_cum_return:.2%}")
+    print(
+        f"Percentage of Tickers Greater Than Last Cumulative Return: {all_tickers.percentage_greater_than_avg_last_cum_return:.2%}"
+    )
 
-    # try:
-    #     investor = Investor(number_of_tickers=1)
-    #     investor.simulate(100, time_delta)
-    #     print(investor.total_return())
-    #     print(StockData.get_avg_return(session))
-    # except Exception as e:
-    #     print("An error occurred:", e)
-    #     session.rollback()  # Roll back the transaction in case of an error
-    # finally:
-    #     session.close()  # Always close the session
+    # import pdb; pdb.set_trace()
 
 
 if __name__ == "__main__":

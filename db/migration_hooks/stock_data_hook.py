@@ -52,7 +52,6 @@ def stock_data_hook(session: Session, stock_data_table) -> None:
             )
             new_date += timedelta(days=1)
 
-
         last_date, last_price = ticker_date_and_price_list[-1]
         new_date = last_date + timedelta(days=1)
 
