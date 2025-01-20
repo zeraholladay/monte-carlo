@@ -27,7 +27,7 @@ class StockData(ModelBase):
     __table_args__ = (UniqueConstraint("ticker", "date", name="uq_ticker_date"),)
 
     def __repr__(self):
-        return f"<StockData(id={self.id}, date={self.date}, ticker={self.ticker}, price={self.price}, daily_pct_change={self.daily_pct_change})>"
+        return f"<StockData(id={self.id}, date={self.date}, ticker={self.ticker}, price={self.price}, daily_pct_change={self.daily_pct_change})>"  # noqa: E501
 
     @staticmethod
     def get_all_unique_tickers(session: Session):

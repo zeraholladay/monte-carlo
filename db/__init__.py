@@ -4,4 +4,4 @@ from .models.base import Base
 from .models.industry_data import Industry
 from .models.stock_data import StockData
 
-__all__ = ["Base" "StockData", "stock_data_hook", "Industry", "industry_data_hook"]
+__all__ = [Base, StockData, stock_data_hook, Industry, industry_data_hook]

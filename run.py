@@ -1,5 +1,3 @@
-from datetime import date, datetime, timedelta
-
 import pandas as pd
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -152,7 +150,7 @@ def main():
     print(f"Avg Last Cumulative Return: {all_tickers.avg_last_cum_return:.2%}")
     print(f"Median Last Cumulative Return: {all_tickers.median_last_cum_return:.2%}")
     print(
-        f"Percentage of Tickers Greater Than Last Cumulative Return: {all_tickers.percentage_greater_than_avg_last_cum_return:.2%}"
+        f"Percentage of Tickers Greater Than Last Cumulative Return: {all_tickers.percentage_greater_than_avg_last_cum_return:.2%}"  # noqa: E501
     )
     all_tickers.show_graph()
 

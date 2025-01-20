@@ -1,13 +1,9 @@
 import csv
 import os
-from datetime import timedelta
 
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from alembic import op
-
-from ..models.stock_data import StockData
 
 
 def industry_data_hook(session: Session, industry_data_table) -> None:
