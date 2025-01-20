@@ -1,6 +1,5 @@
 import pandas as pd
 from sqlalchemy.orm import Session, declarative_base
-from sqlalchemy.sql import text
 
 # Define the declarative base
 Base = declarative_base()
@@ -9,7 +8,7 @@ Base = declarative_base()
 # Add shared functionality through a mixin
 class BaseMixin:
     @staticmethod
-    def get_df_from_sql(session: Session, query: str) -> pd.DataFrame:
+    def get_df_from_sql(session: Session, query, params=None) -> pd.DataFrame:
         """
         Executes a SQL query using the provided SQLAlchemy session and
         returns the result as a Pandas DataFrame.
@@ -27,7 +26,7 @@ class BaseMixin:
             df = BaseMixin.get_df_from_sql(session, query)
         """
         # Execute the query
-        result = session.execute(text(query))
+        result = session.execute(query, params)
 
         # Extract column names
         columns = result.keys()

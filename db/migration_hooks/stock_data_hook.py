@@ -5,6 +5,7 @@ from datetime import timedelta
 from sqlalchemy.orm import Session
 
 from alembic import op
+
 from ..models.stock_data import StockData
 
 

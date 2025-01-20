@@ -2,10 +2,11 @@ import csv
 import os
 from datetime import timedelta
 
-from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 
 from alembic import op
+
 from ..models.stock_data import StockData
 
 
@@ -37,4 +38,3 @@ def industry_data_hook(session: Session, industry_data_table) -> None:
 
     # Insert the data into the table
     op.bulk_insert(industry_data_table, rows)
-

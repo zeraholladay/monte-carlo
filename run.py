@@ -3,7 +3,9 @@ from datetime import date, datetime, timedelta
 import pandas as pd
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql import text
 
+from db import Industry as IndustryData
 from db import StockData
 
 DATABASE_URL = "postgresql://postgres:localhostonly@localhost:5432/postgres"
@@ -63,11 +65,15 @@ class AllTickers:
 
     @property
     def winner_tickers(self):
-        return self.df.loc[self.df["Last Cumulative Return"] > self.avg_last_cum_return, "Tickers"].tolist()
+        return self.df.loc[
+            self.df["Last Cumulative Return"] > self.avg_last_cum_return, "Tickers"
+        ].tolist()
 
     @property
     def loser_tickers(self):
-        return self.df.loc[self.df["Last Cumulative Return"] <= self.avg_last_cum_return, "Tickers"].tolist()
+        return self.df.loc[
+            self.df["Last Cumulative Return"] <= self.avg_last_cum_return, "Tickers"
+        ].tolist()
 
     @property
     def date_range(self):
@@ -76,6 +82,10 @@ class AllTickers:
     @property
     def avg_last_cum_return(self):
         return self.df["Last Cumulative Return"].mean()
+
+    @property
+    def median_last_cum_return(self):
+        return self.df["Last Cumulative Return"].median()
 
     @property
     def percentage_greater_than_avg_last_cum_return(self):
@@ -91,6 +101,7 @@ class AllTickers:
 
         # Create the figure
         threshold = self.avg_last_cum_return
+
         def _colorize(value):
             if value > threshold:
                 return "green"
@@ -109,7 +120,7 @@ class AllTickers:
                 x=tickers,  # Tickers on the x-axis
                 y=cumulative_returns,  # Cumulative returns on the y-axis
                 name="Cumulative Returns",
-                marker_color=colors  # Use the dynamic color list
+                marker_color=colors,  # Use the dynamic color list
             )
         )
 
@@ -127,23 +138,34 @@ class AllTickers:
             xaxis_title="Ticker",
             yaxis_title="Cumulative Return",
             yaxis_tickformat=".0%",  # Format y-axis as percentage
-            template="plotly"
+            template="plotly",
         )
 
         # Show the figure
         fig.show()
+
 
 def main():
     all_tickers = AllTickers()
 
     print(f"Date range: {all_tickers.date_range}")
     print(f"Avg Last Cumulative Return: {all_tickers.avg_last_cum_return:.2%}")
+    print(f"Median Last Cumulative Return: {all_tickers.median_last_cum_return:.2%}")
     print(
         f"Percentage of Tickers Greater Than Last Cumulative Return: {all_tickers.percentage_greater_than_avg_last_cum_return:.2%}"
     )
     all_tickers.show_graph()
 
-    # import pdb; pdb.set_trace()
+    # Quick look by sector:
+
+    params = {"symbols": tuple(all_tickers.winner_tickers)}
+    sql_text = text("select symbol, sector from industry_data where symbol IN :symbols")
+
+    industry_winner_df = IndustryData.get_df_from_sql(session, sql_text, params)
+
+    sector_counts = industry_winner_df["sector"].value_counts()
+
+    print(sector_counts)
 
 
 if __name__ == "__main__":
