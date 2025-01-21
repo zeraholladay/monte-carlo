@@ -62,15 +62,27 @@ class AllTickers:
         self.df = pd.DataFrame(data)
 
     @property
-    def winner_tickers(self):
+    def gt_avg_last_cum_return(self):
         return self.df.loc[
             self.df["Last Cumulative Return"] > self.avg_last_cum_return, "Tickers"
         ].tolist()
 
     @property
-    def loser_tickers(self):
+    def lt_avg_last_cum_return(self):
         return self.df.loc[
             self.df["Last Cumulative Return"] <= self.avg_last_cum_return, "Tickers"
+        ].tolist()
+
+    @property
+    def gt_median_last_cum_return(self):
+        return self.df.loc[
+            self.df["Last Cumulative Return"] > self.median_last_cum_return, "Tickers"
+        ].tolist()
+
+    @property
+    def lt_median_last_cum_return(self):
+        return self.df.loc[
+            self.df["Last Cumulative Return"] <= self.median_last_cum_return, "Tickers"
         ].tolist()
 
     @property
@@ -156,14 +168,29 @@ def main():
     )
     all_tickers.show_graph()
 
-    # Quick look by sector:
+    # Quick look by sector avg:
 
-    params = {"symbols": tuple(all_tickers.winner_tickers)}
+    params = {"symbols": tuple(all_tickers.gt_avg_last_cum_return)}
     sql_text = text("select symbol, sector from industry_data where symbol IN :symbols")
 
     industry_winner_df = IndustryData.get_df_from_sql(session, sql_text, params)
 
     sector_counts = industry_winner_df["sector"].value_counts()
+
+    print("Sectors that beat avg cumulative return")
+
+    print(sector_counts)
+
+    # Quick look by sector median:
+
+    params = {"symbols": tuple(all_tickers.gt_median_last_cum_return)}
+    sql_text = text("select symbol, sector from industry_data where symbol IN :symbols")
+
+    industry_winner_df = IndustryData.get_df_from_sql(session, sql_text, params)
+
+    sector_counts = industry_winner_df["sector"].value_counts()
+
+    print("Sectors that beat median cumulative return")
 
     print(sector_counts)
 
